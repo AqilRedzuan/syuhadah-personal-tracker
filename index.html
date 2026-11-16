@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f7f6f2">
+<title>Personal Savings Tracker</title>
+<style>
+:root{
+  --page:#f7f6f2;--ink:#26332e;--muted:#718078;--green:#368d69;
+  --green-dark:#276f50;--pale:#f3f7f4;--line:#e2e8e3;--white:#fff;
+  --gold:#bd8b36;--blue:#5279ad;--purple:#8064ae;--slate:#647783;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+.app{width:min(100%,1000px);margin:0 auto;padding:34px 22px 64px}
+header{margin:16px 0 34px}
+h1{font-size:clamp(30px,5vw,48px);line-height:1.12;letter-spacing:-1.6px;margin:0;font-weight:800}
+.subtitle{font-size:17px;color:var(--muted);margin:12px 0 0}
+.saved{display:inline-flex;align-items:center;background:#e1f0e7;color:#26704f;border-radius:40px;padding:12px 22px;font-weight:750;font-size:15px;margin-top:25px}
+.toolbar{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}
+button{font:inherit;cursor:pointer}
+.btn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:12px;padding:10px 14px;font-size:13px;font-weight:700}
+.btn.primary{background:var(--green);border-color:var(--green);color:white}
+.btn:hover{filter:brightness(.97)}
+.section-title{font-size:23px;font-weight:800;margin:0 0 17px;letter-spacing:-.5px}
+.overview{background:#fff;border:1.5px solid var(--line);border-radius:30px;padding:26px 28px;margin-bottom:26px}
+.overview-top{display:flex;justify-content:space-between;gap:15px;align-items:flex-start}
+.overview-total{font-size:clamp(34px,6vw,48px);font-weight:850;letter-spacing:-1.7px;margin:8px 0 3px}
+.muted{color:var(--muted)}
+.overview-sub{font-size:16px}
+.overview-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px}
+.mini{background:var(--pale);border-radius:18px;padding:17px}
+.mini-label{font-size:13px;color:var(--muted);margin-bottom:8px}
+.mini-value{font-size:21px;font-weight:800;overflow-wrap:anywhere}
+.account-list{display:grid;gap:25px}
+.account-card{background:#fff;border:1.5px solid var(--line);border-radius:30px;padding:27px 28px 25px}
+.account-title{font-size:25px;font-weight:800;letter-spacing:-.6px;margin:0 0 28px}
+.balance{font-size:clamp(35px,6vw,49px);font-weight:850;letter-spacing:-1.7px;line-height:1.08;margin:0 0 8px;overflow-wrap:anywhere}
+.target-line{font-size:17px;color:var(--muted)}
+.visual-row{display:grid;grid-template-columns:minmax(210px,.95fr) minmax(240px,1.05fr);gap:28px;align-items:center;margin:27px 0 25px}
+.donut-wrap{display:flex;justify-content:center;align-items:center}
+.donut{--pct:0;--accent:var(--green);width:min(100%,230px);aspect-ratio:1;border-radius:50%;background:conic-gradient(var(--accent) calc(var(--pct)*1%),#e7ece8 0);display:grid;place-items:center;position:relative}
+.donut:before{content:"";position:absolute;inset:22px;border-radius:50%;background:#fff}
+.donut-center{position:relative;text-align:center;z-index:1}
+.percent{font-size:clamp(34px,5vw,47px);font-weight:850;letter-spacing:-1.5px}
+.achieved{font-size:15px;color:var(--muted);margin-top:2px}
+.stats{display:grid;gap:14px}
+.stat{background:var(--pale);border-radius:20px;padding:20px 22px}
+.stat-label{font-size:15px;color:var(--muted);margin-bottom:9px}
+.stat-value{font-size:clamp(22px,3.5vw,29px);font-weight:800;letter-spacing:-.6px;overflow-wrap:anywhere}
+.goal-message{font-size:17px;font-weight:800;color:var(--green-dark);margin:4px 0 17px}
+.progress-track{height:15px;background:#e7ece8;border-radius:30px;overflow:hidden}
+.progress-fill{height:100%;background:var(--green);border-radius:30px;width:0}
+.progress-labels{display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:15px;margin-top:12px}
+.card-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:24px;padding-top:20px;border-top:1px solid #edf0ed}
+.account-actions{display:flex;gap:8px;flex-wrap:wrap}
+.account-actions .btn{padding:9px 13px}
+.history{background:#fff;border:1.5px solid var(--line);border-radius:26px;padding:23px 25px;margin-top:28px}
+.history-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.history h2{font-size:21px;margin:0}
+.transaction{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:15px 0;border-top:1px solid #edf0ed}
+.transaction:first-of-type{margin-top:14px}
+.tx-name{font-weight:750;font-size:14px}
+.tx-detail{font-size:12px;color:var(--muted);margin-top:4px}
+.tx-amount{font-weight:800;white-space:nowrap}
+.plus{color:var(--green-dark)}.minus{color:#b6534e}
+.empty{padding:25px 0;text-align:center;color:var(--muted);font-size:14px}
+.modal-bg{position:fixed;inset:0;background:#17251f77;display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
+.modal-bg.open{display:flex}
+.modal{background:white;border-radius:23px;padding:24px;width:min(460px,100%);max-height:90vh;overflow:auto}
+.modal h2{margin:0 0 18px;font-size:22px}
+.form{display:grid;gap:13px}
+label{display:grid;gap:7px;color:#53635b;font-size:13px;font-weight:700}
+input,select{width:100%;padding:12px;border:1px solid #dce5de;border-radius:11px;font:inherit;color:var(--ink);background:#fff}
+.modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}
+.note{background:#f7f5ed;border-radius:12px;padding:12px;color:#78663d;font-size:12px;line-height:1.5;margin-top:17px}
+footer{text-align:center;color:var(--muted);font-size:12px;line-height:1.6;margin-top:25px}
+@media(max-width:650px){
+ .app{padding:26px 16px 45px}
+ header{margin:12px 0 25px}
+ .subtitle{font-size:15px}
+ .overview{padding:22px 20px;border-radius:26px}
+ .overview-grid{grid-template-columns:1fr 1fr}
+ .account-card{padding:23px 20px;border-radius:27px}
+ .account-title{font-size:23px;margin-bottom:27px}
+ .visual-row{grid-template-columns:minmax(0,1fr) minmax(0,1.12fr);gap:15px;margin:25px 0 23px}
+ .donut{width:min(100%,185px)}
+ .donut:before{inset:17px}
+ .percent{font-size:clamp(28px,8vw,39px)}
+ .achieved{font-size:13px}
+ .stat{padding:16px 15px;border-radius:17px}
+ .stat-label{font-size:13px}
+ .stat-value{font-size:clamp(18px,5vw,24px)}
+ .goal-message{font-size:15px}
+ .progress-track{height:13px}
+ .progress-labels{font-size:13px}
+ .card-footer{align-items:flex-start;flex-direction:column}
+}
+@media(max-width:370px){
+ .visual-row{grid-template-columns:1fr;gap:16px}
+ .donut{width:190px}
+ .stats{grid-template-columns:1fr 1fr}
+ .stat{padding:13px 11px}
+ .stat-value{font-size:17px}
+ .overview-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<main class="app">
+<header>
+  <h1>💍 Personal Savings Tracker</h1>
+  <p class="subtitle">Emergency Fund, Master, Investment, Kahwin & Retirement</p>
+  <div class="saved" id="savedBadge">Saved on this device</div>
+  <div class="toolbar">
+    <button class="btn primary" id="addTransaction">＋ Add transaction</button>
+    <button class="btn" id="editTargets">Edit targets</button>
+    <button class="btn" id="backup">↓ Backup</button>
+    <button class="btn" id="restore">↑ Restore</button>
+    <input type="file" id="restoreFile" accept=".json,application/json" hidden>
+  </div>
+</header>
+
+<section class="overview">
+  <div class="overview-top">
+    <div>
+      <h2 class="section-title">Savings Overview</h2>
+      <div class="overview-total" id="totalMoney">RM0.00</div>
+      <div class="overview-sub muted">Total money savings · Excludes gold valuation</div>
+    </div>
+  </div>
+  <div class="overview-grid">
+    <div class="mini"><div class="mini-label">ASB · Emergency Fund</div><div class="mini-value" id="asbTotal">RM0.00</div></div>
+    <div class="mini"><div class="mini-label">ASB 2 · Master</div><div class="mini-value" id="asb2Total">RM0.00</div></div>
+    <div class="mini"><div class="mini-label">Wahed</div><div class="mini-value" id="wahedTotal">RM0.00</div></div>
+    <div class="mini"><div class="mini-label">Public Gold · Kahwin</div><div class="mini-value" id="goldTotal">0.0000 g</div></div>
+    <div class="mini"><div class="mini-label">KWSP · Retirement</div><div class="mini-value" id="kwspTotal">RM0.00</div></div>
+    <div class="mini"><div class="mini-label">Savings entries</div><div class="mini-value" id="entryCount">0</div></div>
+  </div>
+</section>
+
+<h2 class="section-title">My Savings Goals</h2>
+<section class="account-list" id="accountCards"></section>
+
+<section class="history">
+  <div class="history-head"><h2>Transaction History</h2><button class="btn" id="toggleHistory">View all</button></div>
+  <div id="historyList"></div>
+  <div class="note">Your tracker data is saved in this browser on this device. GitHub Pages publishes the website but does not sync your data between devices. Use Backup regularly to keep a copy.</div>
+</section>
+<footer>Personal Savings Tracker · Keep building your future, one saving at a time.</footer>
+</main>
+
+<div class="modal-bg" id="txModal">
+ <div class="modal">
+  <h2>Add transaction</h2>
+  <form class="form" id="txForm">
+   <label>Account<select id="accountSelect"></select></label>
+   <label>Transaction type<select id="typeSelect"><option value="deposit">Deposit / Contribution</option><option value="withdrawal">Withdrawal</option><option value="adjustment">Opening balance / Adjustment</option></select></label>
+   <label>Amount <span id="unitLabel">(RM)</span><input id="amountInput" type="number" min="0.0001" step="0.0001" required placeholder="Enter amount"></label>
+   <label>Date<input id="dateInput" type="date" required></label>
+   <label>Note (optional)<input id="noteInput" maxlength="100" placeholder="e.g. Monthly savings"></label>
+   <div class="modal-actions"><button type="button" class="btn" data-close="txModal">Cancel</button><button class="btn primary" type="submit">Save transaction</button></div>
+  </form>
+ </div>
+</div>
+<div class="modal-bg" id="targetModal">
+ <div class="modal">
+  <h2>Set savings targets</h2>
+  <form class="form" id="targetForm"><div id="targetInputs" class="form"></div>
+   <div class="modal-actions"><button type="button" class="btn" data-close="targetModal">Cancel</button><button class="btn primary" type="submit">Save targets</button></div>
+  </form>
+ </div>
+</div>
+
+<script>
+const KEY="personalSavingsTracker_exactStyle_v2";
+const defaults=[
+ {id:"asb",name:"ASB",purpose:"Emergency Fund",icon:"🛡️",color:"#368d69",soft:"#e6f3e9",unit:"RM",target:0,opening:4514.94},
+ {id:"asb2",name:"ASB 2",purpose:"Master",icon:"🎓",color:"#5279ad",soft:"#e9effb",unit:"RM",target:0,opening:0},
+ {id:"wahed",name:"Wahed",purpose:"Investment",icon:"📈",color:"#8064ae",soft:"#f0eafb",unit:"RM",target:0,opening:1472.84},
+ {id:"gold",name:"Public Gold",purpose:"Kahwin Savings",icon:"💍",color:"#bd8b36",soft:"#fbf1df",unit:"g",target:8.5,opening:1.6834},
+ {id:"kwsp",name:"KWSP",purpose:"Retirement",icon:"🏦",color:"#647783",soft:"#e8eef0",unit:"RM",target:0,opening:0}
+];
+let data=load();
+let expanded=false;
+function uid(){return (crypto.randomUUID?crypto.randomUUID():Date.now()+"-"+Math.random().toString(16).slice(2))}
+function load(){
+ try{
+  const raw=localStorage.getItem(KEY);
+  if(raw){const x=JSON.parse(raw);if(Array.isArray(x.accounts)&&Array.isArray(x.transactions))return x}
+ }catch(e){}
+ const accounts=defaults.map(a=>({...a}));
+ const transactions=accounts.filter(a=>a.opening>0).map(a=>({id:uid(),accountId:a.id,type:"adjustment",amount:a.opening,date:"2026-11-16",note:"Opening balance from previous tracker"}));
+ return {accounts,transactions};
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(data));document.getElementById("savedBadge").textContent="Saved on this device"}
+function bal(id){return data.transactions.filter(t=>t.accountId===id).reduce((s,t)=>s+(t.type==="withdrawal"?-Number(t.amount):Number(t.amount)),0)}
+function fmt(a,n){return a.unit==="g"?Number(n).toFixed(4)+" g":new Intl.NumberFormat("en-MY",{style:"currency",currency:"MYR"}).format(n)}
+function rm(n){return new Intl.NumberFormat("en-MY",{style:"currency",currency:"MYR"}).format(n)}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function render(){
+ const accounts=data.accounts.map(a=>({...a,balance:bal(a.id)}));
+ const money=accounts.filter(a=>a.unit==="RM").reduce((s,a)=>s+a.balance,0);
+ document.getElementById("totalMoney").textContent=rm(money);
+ document.getElementById("asbTotal").textContent=rm(bal("asb"));
+ document.getElementById("asb2Total").textContent=rm(bal("asb2"));
+ document.getElementById("wahedTotal").textContent=rm(bal("wahed"));
+ document.getElementById("goldTotal").textContent=bal("gold").toFixed(4)+" g";
+ document.getElementById("kwspTotal").textContent=rm(bal("kwsp"));
+ document.getElementById("accountCount").textContent=accounts.filter(a=>a.unit==="RM").length+" accounts";
+ document.getElementById("entryCount").textContent=data.transactions.length;
+ document.getElementById("accountCards").innerHTML=accounts.map(a=>{
+  const pct=a.target>0?Math.min(100,a.balance/a.target*100):0;
+  const left=a.target>0?Math.max(0,a.target-a.balance):null;
+  const targetText=a.target>0?"Target "+fmt(a,a.target):"Target not set";
+  const achieved=a.target>0?pct.toFixed(1)+"%":"—";
+  const message=a.target>0?(left>0?fmt(a,left)+" left to reach your goal":"Goal achieved! 🎉"):"Set a target to track your progress";
+  const savedLabel=a.unit==="g"?"Gold saved":"Saved so far";
+  const remainingLabel=a.target>0?"Remaining to goal":"Target status";
+  const remainingValue=a.target>0?fmt(a,left):"Not set";
+  return `<article class="account-card">
+   <h3 class="account-title">${esc(a.name)}</h3>
+   <div class="balance">${fmt(a,a.balance)}</div>
+   <div class="target-line">${esc(a.purpose)} · ${targetText}</div>
+   <div class="visual-row">
+    <div class="donut-wrap"><div class="donut" style="--pct:${pct};--accent:${a.color}">
+     <div class="donut-center"><div class="percent">${achieved}</div><div class="achieved">achieved</div></div>
+    </div></div>
+    <div class="stats">
+     <div class="stat"><div class="stat-label">${remainingLabel}</div><div class="stat-value">${remainingValue}</div></div>
+     <div class="stat"><div class="stat-label">${savedLabel}</div><div class="stat-value">${fmt(a,a.balance)}</div></div>
+    </div>
+   </div>
+   <div class="goal-message">${esc(message)}</div>
+   <div class="progress-track"><div class="progress-fill" style="width:${pct}%;background:${a.color}"></div></div>
+   <div class="progress-labels"><span>${achieved} achieved</span><span>${a.target>0?fmt(a,left)+" remaining":"No target set"}</span></div>
+   <div class="card-footer"><span class="muted" style="font-size:13px">${a.unit==="g"?"Public Gold · Grams":"Account balance · MYR"}</span>
+    <div class="account-actions"><button class="btn primary" data-deposit="${a.id}">＋ Add</button><button class="btn" data-withdraw="${a.id}">− Withdraw</button><button class="btn" data-adjust="${a.id}">Edit balance</button></div>
+   </div>
+  </article>`;
+ }).join("");
+ const sorted=[...data.transactions].sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+ const txs=expanded?sorted:sorted.slice(0,6);
+ document.getElementById("historyList").innerHTML=txs.length?txs.map(t=>{
+  const a=data.accounts.find(x=>x.id===t.accountId)||{name:"Unknown",unit:"RM"};
+  const out=t.type==="withdrawal";
+  const label=t.type==="adjustment"?"Adjustment":out?"Withdrawal":"Deposit";
+  return `<div class="transaction"><div><div class="tx-name">${esc(a.name)} · ${esc(t.note||label)}</div><div class="tx-detail">${esc(t.date)} · ${label}</div></div><div class="tx-amount ${out?"minus":"plus"}">${out?"−":"+"}${fmt(a,Number(t.amount))}</div></div>`;
+ }).join(""):'<div class="empty">No transactions yet. Add your first savings entry.</div>';
+ document.getElementById("toggleHistory").textContent=expanded?"Show less":"View all";
+}
+function openTx(id,type){
+ document.getElementById("accountSelect").innerHTML=data.accounts.map(a=>`<option value="${a.id}">${esc(a.name)}</option>`).join("");
+ if(id)document.getElementById("accountSelect").value=id;
+ document.getElementById("typeSelect").value=type||"deposit";
+ document.getElementById("amountInput").value="";
+ document.getElementById("dateInput").value=new Date().toISOString().slice(0,10);
+ document.getElementById("noteInput").value="";
+ unitHint();document.getElementById("txModal").classList.add("open");
+}
+function unitHint(){const a=data.accounts.find(x=>x.id===document.getElementById("accountSelect").value);document.getElementById("unitLabel").textContent=a&&a.unit==="g"?"(grams)":"(RM)"}
+document.getElementById("addTransaction").onclick=()=>openTx();
+document.getElementById("accountSelect").onchange=unitHint;
+document.getElementById("txForm").onsubmit=e=>{
+ e.preventDefault();
+ const id=document.getElementById("accountSelect").value,type=document.getElementById("typeSelect").value,amount=Number(document.getElementById("amountInput").value),date=document.getElementById("dateInput").value;
+ if(!Number.isFinite(amount)||amount<=0)return alert("Enter a valid amount.");
+ if(type==="withdrawal"&&amount>bal(id))return alert("Withdrawal exceeds the current balance.");
+ data.transactions.push({id:uid(),accountId:id,type,amount,date,note:document.getElementById("noteInput").value.trim()});
+ save();render();document.getElementById("txModal").classList.remove("open");
+};
+document.getElementById("accountCards").addEventListener("click",e=>{
+ const d=e.target.closest("[data-deposit]"),w=e.target.closest("[data-withdraw]"),a=e.target.closest("[data-adjust]");
+ if(d)openTx(d.dataset.deposit,"deposit");
+ if(w)openTx(w.dataset.withdraw,"withdrawal");
+ if(a){
+  const id=a.dataset.adjust,account=data.accounts.find(x=>x.id===id),current=bal(id);
+  const value=prompt("Enter new balance for "+account.name+" ("+(account.unit==="g"?"grams":"RM")+")",current.toFixed(account.unit==="g"?4:2));
+  if(value===null)return;const next=Number(value);
+  if(!Number.isFinite(next)||next<0)return alert("Enter a valid balance.");
+  const diff=next-current;if(Math.abs(diff)<0.0000001)return;
+  data.transactions.push({id:uid(),accountId:id,type:diff<0?"withdrawal":"adjustment",amount:Math.abs(diff),date:new Date().toISOString().slice(0,10),note:"Balance correction"});
+  save();render();
+ }
+});
+document.getElementById("editTargets").onclick=()=>{
+ document.getElementById("targetInputs").innerHTML=data.accounts.map(a=>`<label>${esc(a.name)} target (${a.unit==="g"?"grams":"RM"})<input id="target-${a.id}" type="number" min="0" step="${a.unit==="g"?"0.0001":"0.01"}" value="${a.target}"></label>`).join("");
+ document.getElementById("targetModal").classList.add("open");
+};
+document.getElementById("targetForm").onsubmit=e=>{
+ e.preventDefault();data.accounts.forEach(a=>{const n=Number(document.getElementById("target-"+a.id).value);if(Number.isFinite(n)&&n>=0)a.target=n});
+ save();render();document.getElementById("targetModal").classList.remove("open");
+};
+function backup(){
+ const blob=new Blob([JSON.stringify({...data,exportedAt:new Date().toISOString()},null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download="personal-savings-backup.json";link.click();URL.revokeObjectURL(url);
+}
+document.getElementById("backup").onclick=backup;
+document.getElementById("restore").onclick=()=>document.getElementById("restoreFile").click();
+document.getElementById("restoreFile").onchange=e=>{
+ const file=e.target.files[0];if(!file)return;const reader=new FileReader();
+ reader.onload=()=>{try{const x=JSON.parse(reader.result);if(!Array.isArray(x.accounts)||!Array.isArray(x.transactions))throw 0;if(!confirm("Replace current tracker data with this backup?"))return;data=x;save();render();alert("Backup restored.")}catch(err){alert("Invalid backup file.")}};
+ reader.readAsText(file);e.target.value="";
+};
+document.getElementById("toggleHistory").onclick=()=>{expanded=!expanded;render()};
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>document.getElementById(b.dataset.close).classList.remove("open"));
+document.querySelectorAll(".modal-bg").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)m.classList.remove("open")}));
+if(!localStorage.getItem(KEY))save();
+render();
+</script>
+</body>
+</html>
