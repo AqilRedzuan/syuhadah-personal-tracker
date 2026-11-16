@@ -326,7 +326,7 @@ function saveTargets(){
  }
 }
 window.saveTargets = saveTargets;
-document.getElementById("saveTargetsBtn").addEventListener("click",function(e){e.preventDefault();saveTargets()});
+// The button uses its inline onclick handler; do not register a second click listener.
 document.getElementById("targetForm").addEventListener("submit",e=>{e.preventDefault();saveTargets()});
 function backup(){
  const blob=new Blob([JSON.stringify({...data,exportedAt:new Date().toISOString()},null,2)],{type:"application/json"});
