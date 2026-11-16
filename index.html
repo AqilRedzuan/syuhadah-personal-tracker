@@ -168,7 +168,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;line-height:1.6;margi
  <div class="modal">
   <h2>Set savings targets</h2>
   <form class="form" id="targetForm"><div id="targetInputs" class="form"></div>
-   <div class="modal-actions"><button type="button" class="btn" data-close="targetModal">Cancel</button><button class="btn primary" type="submit">Save targets</button></div>
+   <div class="modal-actions"><button type="button" class="btn" data-close="targetModal">Cancel</button><button class="btn primary" type="button" id="saveTargetsBtn">Save targets</button></div>
   </form>
  </div>
 </div>
@@ -194,7 +194,17 @@ function load(){
  const transactions=accounts.filter(a=>a.opening>0).map(a=>({id:uid(),accountId:a.id,type:"adjustment",amount:a.opening,date:"2026-11-16",note:"Opening balance from previous tracker"}));
  return {accounts,transactions};
 }
-function save(){localStorage.setItem(KEY,JSON.stringify(data));document.getElementById("savedBadge").textContent="Saved on this device"}
+function save(){
+ try {
+  localStorage.setItem(KEY,JSON.stringify(data));
+  document.getElementById("savedBadge").textContent="Saved on this device";
+  return true;
+ } catch(err) {
+  document.getElementById("savedBadge").textContent="Could not save on this device";
+  alert("Unable to save in this browser. Please check browser storage settings or use Backup to download your data.");
+  return false;
+ }
+}
 function bal(id){return data.transactions.filter(t=>t.accountId===id).reduce((s,t)=>s+(t.type==="withdrawal"?-Number(t.amount):Number(t.amount)),0)}
 function fmt(a,n){return a.unit==="g"?Number(n).toFixed(4)+" g":new Intl.NumberFormat("en-MY",{style:"currency",currency:"MYR"}).format(n)}
 function rm(n){return new Intl.NumberFormat("en-MY",{style:"currency",currency:"MYR"}).format(n)}
@@ -288,10 +298,25 @@ document.getElementById("editTargets").onclick=()=>{
  document.getElementById("targetInputs").innerHTML=data.accounts.map(a=>`<label>${esc(a.name)} target (${a.unit==="g"?"grams":"RM"})<input id="target-${a.id}" type="number" min="0" step="${a.unit==="g"?"0.0001":"0.01"}" value="${a.target}"></label>`).join("");
  document.getElementById("targetModal").classList.add("open");
 };
-document.getElementById("targetForm").onsubmit=e=>{
- e.preventDefault();data.accounts.forEach(a=>{const n=Number(document.getElementById("target-"+a.id).value);if(Number.isFinite(n)&&n>=0)a.target=n});
- save();render();document.getElementById("targetModal").classList.remove("open");
-};
+function saveTargets(){
+ const updated={};
+ for(const a of data.accounts){
+  const field=document.getElementById("target-"+a.id);
+  const raw=field.value.trim();
+  if(raw==="" || !Number.isFinite(Number(raw)) || Number(raw)<0){
+   alert("Please enter a valid target of 0 or more for "+a.name+".");
+   field.focus();
+   return;
+  }
+  updated[a.id]=Number(raw);
+ }
+ data.accounts.forEach(a=>{a.target=updated[a.id]});
+ if(!save()) return;
+ render();
+ document.getElementById("targetModal").classList.remove("open");
+}
+document.getElementById("saveTargetsBtn").addEventListener("click",saveTargets);
+document.getElementById("targetForm").addEventListener("submit",e=>{e.preventDefault();saveTargets()});
 function backup(){
  const blob=new Blob([JSON.stringify({...data,exportedAt:new Date().toISOString()},null,2)],{type:"application/json"});
  const url=URL.createObjectURL(blob),link=document.createElement("a");link.href=url;link.download="personal-savings-backup.json";link.click();URL.revokeObjectURL(url);
