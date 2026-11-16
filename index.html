@@ -168,7 +168,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;line-height:1.6;margi
  <div class="modal">
   <h2>Set savings targets</h2>
   <form class="form" id="targetForm"><div id="targetInputs" class="form"></div>
-   <div class="modal-actions"><button type="button" class="btn" data-close="targetModal">Cancel</button><button class="btn primary" type="button" id="saveTargetsBtn">Save targets</button></div>
+   <div class="modal-actions"><button type="button" class="btn" data-close="targetModal">Cancel</button><button class="btn primary" type="button" id="saveTargetsBtn" onclick="saveTargets()">Save targets</button></div>
   </form>
  </div>
 </div>
@@ -299,6 +299,7 @@ document.getElementById("editTargets").onclick=()=>{
  document.getElementById("targetModal").classList.add("open");
 };
 function saveTargets(){
+ try {
  const updated={};
  for(const a of data.accounts){
   const field=document.getElementById("target-"+a.id);
@@ -314,8 +315,14 @@ function saveTargets(){
  if(!save()) return;
  render();
  document.getElementById("targetModal").classList.remove("open");
+ alert("Targets saved successfully!");
+ } catch(err) {
+  console.error("Save targets failed:",err);
+  alert("Could not save targets: "+(err && err.message ? err.message : "Unknown error"));
+ }
 }
-document.getElementById("saveTargetsBtn").addEventListener("click",saveTargets);
+window.saveTargets = saveTargets;
+document.getElementById("saveTargetsBtn").addEventListener("click",function(e){e.preventDefault();saveTargets()});
 document.getElementById("targetForm").addEventListener("submit",e=>{e.preventDefault();saveTargets()});
 function backup(){
  const blob=new Blob([JSON.stringify({...data,exportedAt:new Date().toISOString()},null,2)],{type:"application/json"});
