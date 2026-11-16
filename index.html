@@ -218,7 +218,7 @@ function render(){
  document.getElementById("wahedTotal").textContent=rm(bal("wahed"));
  document.getElementById("goldTotal").textContent=bal("gold").toFixed(4)+" g";
  document.getElementById("kwspTotal").textContent=rm(bal("kwsp"));
- document.getElementById("accountCount").textContent=accounts.filter(a=>a.unit==="RM").length+" accounts";
+ // Removed obsolete accountCount UI reference; ASB and ASB 2 are displayed separately.
  document.getElementById("entryCount").textContent=data.transactions.length;
  document.getElementById("accountCards").innerHTML=accounts.map(a=>{
   const pct=a.target>0?Math.min(100,a.balance/a.target*100):0;
@@ -311,10 +311,14 @@ function saveTargets(){
   }
   updated[a.id]=Number(raw);
  }
+ const previousTargets = data.accounts.map(a=>({id:a.id,target:a.target}));
  data.accounts.forEach(a=>{a.target=updated[a.id]});
- if(!save()) return;
- render();
+ if(!save()) {
+  data.accounts.forEach(a=>{const old=previousTargets.find(x=>x.id===a.id);if(old)a.target=old.target});
+  return;
+ }
  document.getElementById("targetModal").classList.remove("open");
+ render();
  alert("Targets saved successfully!");
  } catch(err) {
   console.error("Save targets failed:",err);
